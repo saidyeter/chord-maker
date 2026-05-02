@@ -239,33 +239,35 @@ export default function App() {
         onChange={(e) => setRawLyrics(e.target.value)}
         style={{ width: "100%", height: 120, marginBottom: 10 }}
       />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
 
-      <button onClick={handleConvert}>Satırlara Böl</button>
+        <button onClick={handleConvert}>Satırlara Böl</button>
 
-      {/* MODE SWITCH */}
-      <div style={{ marginTop: 10 }}>
-        Mod:
-        <select
-          value={mode}
-          onChange={(e) => changeMode(e.target.value as any)}
-          style={{ marginLeft: 8 }}
-        >
-          <option value="sharp">Cis (Sharp)</option>
-          <option value="flat">Des (Flat)</option>
-        </select>
+        {/* MODE SWITCH */}
+        <div style={{ marginTop: 10 }}>
+          Mod:
+          <select
+            value={mode}
+            onChange={(e) => changeMode(e.target.value as any)}
+            style={{ marginLeft: 8 }}
+          >
+            <option value="sharp">Cis (Sharp)</option>
+            <option value="flat">Des (Flat)</option>
+          </select>
+        </div>
+
+
+        <div style={{ marginTop: 10 }}>
+          <button onClick={generateShareLink}>Link ile paylaş</button>
+        </div>
+
       </div>
 
-      <div style={{ marginTop: 10 }}>
+      <h2 style={{ marginTop: 20, textAlign: 'start' }}>Ton Degistir</h2>
+      <div style={{ marginTop: 10, width: '100%', display: 'flex', justifyContent: 'start', alignItems: 'center', gap: 10 }}>
         <button onClick={() => transposeAll(-1)}>-1</button>
-        <button onClick={() => transposeAll(1)} style={{ marginLeft: 8 }}>
-          +1
-        </button>
+        <button onClick={() => transposeAll(1)}>+1</button>
       </div>
-
-      <div style={{ marginTop: 10 }}>
-        <button onClick={generateShareLink}>Link ile paylaş</button>
-      </div>
-
       <div style={{ marginTop: 20 }}>
         {lines.map((line, i) => renderLine(line, i))}
       </div>
