@@ -11,6 +11,25 @@ type Line = {
   chords: Chord[];
 };
 
+const a = [
+  ["C",],
+  ["Des", "D",],
+  ["Es", "E",],
+  ["F",],
+  ["Ges", "G",],
+  ["As", "A",],
+  ["B", "H",],
+]
+
+const b = [
+  ["C", "Cis"],
+  ["D", "Dis"],
+  ["E",],
+  ["F", "Fis"],
+  ["G", "Gis"],
+  ["A", "Ais"],
+  ["H",],
+]
 // 🎸 MODES
 const SHARP_SCALE = ["C", "Cis", "D", "Dis", "E", "F", "Fis", "G", "Gis", "A", "Ais", "H"];
 const FLAT_SCALE = ["C", "Des", "D", "Es", "E", "F", "Ges", "G", "As", "A", "B", "H"];
@@ -262,12 +281,21 @@ export default function App() {
             border: "1px solid #ccc",
           }}
         >
-          <div>Akor seç:</div>
-          {getScale(mode).map((c) => (
-            <button key={c} onClick={() => addChord(c)} style={{ margin: 4 }}>
-              {c}
-            </button>
-          ))}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <span>Akor seç</span>
+            <button onClick={() => setSelectedLine(null)}>X</button>
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexDirection: 'column' }}>
+            {(mode !== "sharp" ? a : b).map((group, i) => (
+              <div key={i} style={{ marginTop: 10, display: 'flex', gap: 10 }}>
+                {group.map((c) => (
+                  <button key={c} onClick={() => addChord(c)} style={{ margin: 4 }}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
