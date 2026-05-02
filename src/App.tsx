@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import './App.css';
 
 // Types
 type Chord = {
@@ -12,34 +11,36 @@ type Line = {
   chords: Chord[];
 };
 
-const CHORDS = ["C", "Cm", "D", "Dm", "E", "Em", "F", "G", "Am"];
+// 🎸 MODES
+const SHARP_SCALE = ["C", "Cis", "D", "Dis", "E", "F", "Fis", "G", "Gis", "A", "Ais", "H"];
+const FLAT_SCALE = ["C", "Des", "D", "Es", "E", "F", "Ges", "G", "As", "A", "B", "H"];
 
-const SCALE = [
-  "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
-];
+function getScale(mode: "sharp" | "flat") {
+  return mode === "sharp" ? SHARP_SCALE : FLAT_SCALE;
+}
 
-const FLAT_MAP: Record<string, string> = {
-  Db: "C#",
-  Eb: "D#",
-  Gb: "F#",
-  Ab: "G#",
-  Bb: "A#",
-};
+function transposeChord(chord: string, step: number, mode: "sharp" | "flat") {
+  const sharpIndex = SHARP_SCALE.indexOf(chord);
+  const flatIndex = FLAT_SCALE.indexOf(chord);
 
-function transposeChord(chord: string, step: number) {
-  const match = chord.match(/^([A-G][b#]?)(.*)$/);
-  if (!match) return chord;
-
-  let [, root, suffix] = match;
-  root = FLAT_MAP[root] || root;
-
-  const index = SCALE.indexOf(root);
+  let index = sharpIndex !== -1 ? sharpIndex : flatIndex;
   if (index === -1) return chord;
 
   const newIndex = (index + step + 12) % 12;
-  return SCALE[newIndex] + suffix;
+  return getScale(mode)[newIndex];
 }
 
+function convertChord(chord: string, mode: "sharp" | "flat") {
+  const sharpIndex = SHARP_SCALE.indexOf(chord);
+  const flatIndex = FLAT_SCALE.indexOf(chord);
+
+  let index = sharpIndex !== -1 ? sharpIndex : flatIndex;
+  if (index === -1) return chord;
+
+  return getScale(mode)[index];
+}
+
+// 🔗 Encode / Decode (share link için kalıyor)
 function encodeData(data: Line[]) {
   return btoa(encodeURIComponent(JSON.stringify(data)));
 }
@@ -64,6 +65,8 @@ export default function App() {
     lineIndex: number;
     chordIndex: number;
   } | null>(null);
+
+  const [mode, setMode] = useState<"sharp" | "flat">("sharp");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -125,25 +128,28 @@ export default function App() {
         ...line,
         chords: line.chords.map((c) => ({
           ...c,
-          chord: transposeChord(c.chord, step),
+          chord: transposeChord(c.chord, step, mode),
         })),
       }))
     );
   };
 
-  const exportData = () => {
-    const dataStr = JSON.stringify(lines, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
+  // 🔄 MODE CHANGE
+  const changeMode = (newMode: "sharp" | "flat") => {
+    setLines((prev) =>
+      prev.map((line) => ({
+        ...line,
+        chords: line.chords.map((c) => ({
+          ...c,
+          chord: convertChord(c.chord, newMode),
+        })),
+      }))
+    );
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "song.json";
-    a.click();
-
-    URL.revokeObjectURL(url);
+    setMode(newMode);
   };
 
+  // 🔗 SHARE LINK
   const generateShareLink = async () => {
     const encoded = encodeData(lines);
     const url = `${window.location.origin}?data=${encoded}`;
@@ -172,9 +178,7 @@ export default function App() {
                 left: c.position * 8,
                 display: "inline-block",
               }}
-              onMouseEnter={() =>
-                setHoveredChord({ lineIndex, chordIndex })
-              }
+              onMouseEnter={() => setHoveredChord({ lineIndex, chordIndex })}
               onMouseLeave={() => setHoveredChord(null)}
               onClick={(e) => e.stopPropagation()}
             >
@@ -219,6 +223,19 @@ export default function App() {
 
       <button onClick={handleConvert}>Satırlara Böl</button>
 
+      {/* MODE SWITCH */}
+      <div style={{ marginTop: 10 }}>
+        Mod:
+        <select
+          value={mode}
+          onChange={(e) => changeMode(e.target.value as any)}
+          style={{ marginLeft: 8 }}
+        >
+          <option value="sharp">Cis (Sharp)</option>
+          <option value="flat">Des (Flat)</option>
+        </select>
+      </div>
+
       <div style={{ marginTop: 10 }}>
         <button onClick={() => transposeAll(-1)}>-1</button>
         <button onClick={() => transposeAll(1)} style={{ marginLeft: 8 }}>
@@ -227,10 +244,7 @@ export default function App() {
       </div>
 
       <div style={{ marginTop: 10 }}>
-        <button onClick={exportData}>Export JSON</button>
-        <button onClick={generateShareLink} style={{ marginLeft: 8 }}>
-          Link ile paylaş
-        </button>
+        <button onClick={generateShareLink}>Link ile paylaş</button>
       </div>
 
       <div style={{ marginTop: 20 }}>
@@ -249,12 +263,8 @@ export default function App() {
           }}
         >
           <div>Akor seç:</div>
-          {CHORDS.map((c) => (
-            <button
-              key={c}
-              onClick={() => addChord(c)}
-              style={{ margin: 4 }}
-            >
+          {getScale(mode).map((c) => (
+            <button key={c} onClick={() => addChord(c)} style={{ margin: 4 }}>
               {c}
             </button>
           ))}
